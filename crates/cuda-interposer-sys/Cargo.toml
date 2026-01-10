@@ -4,8 +4,6 @@ version = "0.11.3"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 description = "Low level bindings to the CUDA Driver API. Adopted from cust-raw crate from the Rust-GPU project. https://github.com/Rust-GPU/rust-cuda"
-repository = ""
-readme = "../../README.md"
 links = "cuda"
 build = "build/main.rs"
 
