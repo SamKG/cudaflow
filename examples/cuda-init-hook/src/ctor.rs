@@ -1,4 +1,3 @@
-//! One-time tracing initialisation.
 use std::str::FromStr;
 
 use tracing::level_filters::LevelFilter;

@@ -1,5 +1,5 @@
-//! # The build script for cust_raw
-//! The build script for the cust_raw generates bindings for libraries in the
+//! # The build script for cuda_interposer_sys
+//! The build script for the cuda_interposer_sys generates bindings for libraries in the
 //! CUDA SDK. The build scripts searches for the CUDA SDK by reading the
 //! `CUDA_PATH`, `CUDA_ROOT`, or `CUDA_TOOLKIT_ROOT_DIR` environment variables
 //! in that order. If none of these variables are set to a vaild CUDA Toolkit
@@ -109,7 +109,6 @@ fn main() {
         fs::copy(sdk.libdevice_bitcode_path(), outdir.join("libdevice.bc"))
             .expect("Cannot copy libdevice bitcode file.");
     }
-
 }
 
 fn create_cuda_driver_bindings(
@@ -396,11 +395,7 @@ fn create_nvvm_bindings(sdk: &cuda_sdk::CudaSdk, outdir: &path::Path, manifest_d
         .expect("Cannot write libNVVM bindgen output to file.");
 }
 
-fn create_cupti_bindings(
-    sdk: &cuda_sdk::CudaSdk,
-    outdir: &path::Path,
-    manifest_dir: &path::Path,
-) {
+fn create_cupti_bindings(sdk: &cuda_sdk::CudaSdk, outdir: &path::Path, manifest_dir: &path::Path) {
     if !cfg!(feature = "cupti") {
         return;
     }

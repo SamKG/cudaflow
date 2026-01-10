@@ -2,64 +2,77 @@ use anyhow::{Context, Result};
 use std::collections::HashMap;
 use std::env;
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use tree_sitter::StreamingIterator;
 use walkdir::WalkDir;
 
-/// Files to scan for "reference" prototypes (from cust_raw)
-const BINDINGS_RS: &[&str] = &["driver_internal_sys.rs"];
-
-fn main() -> Result<()> {
-    let out_dir = PathBuf::from(env::var("OUT_DIR")?);
-    let target_dir = find_target_dir(&out_dir);
-    let src_dir = PathBuf::from("src");
-
-    // 1. Cleanup old shared object to force reload
-    let so_path = target_dir.join("libreaper_cuda_hooks.so");
-    if so_path.exists() {
-        let _ = fs::remove_file(&so_path);
-    }
-
-    // 2. Scan local source for manual hooks using Tree-sitter (No Regex)
-    let manual_hooks = scan_local_hooks(&src_dir.join("hooks"))?;
-
-    // Debug print to verify detection (visible with cargo build -vv)
-    for hook in manual_hooks.keys() {
-        println!("cargo:warning=Detected manual hook: {}", hook);
-    }
-
-    // 3. Generate hook_map.rs (Match statement for cuGetProcAddress)
-    generate_hook_map(&out_dir, &manual_hooks)?;
-
-    // 4. Scan bindgen output for all available CUDA functions
-    let all_protos = scan_bindgen_prototypes(&target_dir, BINDINGS_RS)?;
-
-    // 5. Filter: Passthroughs = All - Manual
-    let mut driver_passthroughs = Vec::new();
-    for proto in all_protos {
-        // Skip if we implemented it manually
-        if manual_hooks.contains_key(&proto.name) {
-            continue;
-        }
-
-        if proto.name.starts_with("cu") {
-            driver_passthroughs.push(proto);
-        }
-    }
-
-    // 6. Emit Passthroughs
-    emit_passthroughs(
-        &out_dir.join("passthroughs_driver.rs"),
-        &driver_passthroughs,
-    )?;
-
-    println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed=src");
-
-    Ok(())
+pub struct InterposerBuilder {
+    src_dir: PathBuf,
+    out_dir: PathBuf,
+    manifest_dir: PathBuf,
 }
 
-// ─── Data Structures ─────────────────────────────────────────────────────────
+impl InterposerBuilder {
+    pub fn new() -> Self {
+        let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
+        Self {
+            src_dir: manifest_dir.join("src"),
+            out_dir: PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR not set")),
+            manifest_dir,
+        }
+    }
+
+    /// Sets the source directory to scan for manual hooks (default: ./src)
+    pub fn with_src(mut self, path: impl Into<PathBuf>) -> Self {
+        self.src_dir = path.into();
+        self
+    }
+
+    /// Run the build process.
+    pub fn build(self) -> Result<()> {
+        println!("cargo:rerun-if-changed={}", self.src_dir.display());
+
+        let manual_hooks = scan_local_hooks(&self.src_dir)?;
+        for hook in manual_hooks.keys() {
+            println!("cargo:warning=Detected manual hook: {}", hook);
+        }
+
+        generate_hook_map(&self.out_dir, &manual_hooks)?;
+
+        let target_dir = find_target_dir(&self.out_dir);
+        let all_protos = scan_bindgen_prototypes(&target_dir, &["driver_internal_sys.rs"])?;
+
+        if all_protos.is_empty() {
+            println!(
+                "cargo:warning=No CUDA prototypes found. Ensure cuda_interposer_sys is in dependencies."
+            );
+        }
+
+        let mut driver_passthroughs = Vec::new();
+        for proto in all_protos {
+            // Skip functions explicitly hooked by the user
+            if manual_hooks.contains_key(&proto.name) {
+                continue;
+            }
+            // Skip functions handled internally by the interposer infrastructure
+            if proto.name == "cuGetProcAddress" || proto.name == "cuGetProcAddress_v2" {
+                continue;
+            }
+
+            if proto.name.starts_with("cu") {
+                driver_passthroughs.push(proto);
+            }
+        }
+
+        emit_passthroughs(
+            &self.out_dir.join("passthroughs_driver.rs"),
+            &driver_passthroughs,
+        )?;
+
+        Ok(())
+    }
+}
 
 #[derive(Clone, Debug)]
 struct Prototype {
@@ -69,13 +82,9 @@ struct Prototype {
     ret: String,
 }
 
-// ─── Scanners ────────────────────────────────────────────────────────────────
-
 fn scan_local_hooks(root: &Path) -> Result<HashMap<String, String>> {
     let mut hooks = HashMap::new();
     let mut parser = create_rust_parser();
-
-    // Query 1: Find the Macro Invocation and capture its Body (token_tree)
     let macro_query = tree_sitter::Query::new(
         &tree_sitter_rust::LANGUAGE.into(),
         r#"(macro_invocation
@@ -83,13 +92,11 @@ fn scan_local_hooks(root: &Path) -> Result<HashMap<String, String>> {
             (token_tree) @tt
            )"#,
     )?;
-
-    // Query 2: Find the Function Name inside the body (used in the inner parse)
     let func_query = tree_sitter::Query::new(
         &tree_sitter_rust::LANGUAGE.into(),
         r#"(function_item
             name: (identifier) @func_name
-           )"#,
+            )"#,
     )?;
 
     for entry in WalkDir::new(root) {
@@ -99,23 +106,18 @@ fn scan_local_hooks(root: &Path) -> Result<HashMap<String, String>> {
             let tree = parser
                 .parse(&src, None)
                 .context("Failed to parse rust file")?;
-
             let mut cursor = tree_sitter::QueryCursor::new();
             let mut matches = cursor.matches(&macro_query, tree.root_node(), src.as_bytes());
 
             while let Some(m) = matches.next() {
-                // Capture @tt (index 1 based on query order above)
                 let tt_node = m.captures.iter().find(|c| c.index == 1).unwrap().node;
                 let tt_text = &src[tt_node.byte_range()];
-
-                // Strip the surrounding braces `{ ... }` or `( ... )`
-                // We assume length >= 2 for braces.
                 if tt_text.len() < 2 {
                     continue;
                 }
                 let inner_src = &tt_text[1..tt_text.len() - 1];
 
-                // DOUBLE PARSE: Parse the macro body content as valid Rust code
+                // Double Parse: Macro body
                 let mut inner_parser = create_rust_parser();
                 if let Some(inner_tree) = inner_parser.parse(inner_src, None) {
                     let mut inner_cursor = tree_sitter::QueryCursor::new();
@@ -124,9 +126,8 @@ fn scan_local_hooks(root: &Path) -> Result<HashMap<String, String>> {
                         inner_tree.root_node(),
                         inner_src.as_bytes(),
                     );
-
                     while let Some(im) = inner_matches.next() {
-                        let name_node = im.captures[0].node; // @func_name is index 0
+                        let name_node = im.captures[0].node;
                         let name = &inner_src[name_node.byte_range()];
                         hooks.insert(name.to_string(), name.to_string());
                     }
@@ -134,7 +135,6 @@ fn scan_local_hooks(root: &Path) -> Result<HashMap<String, String>> {
             }
         }
     }
-
     Ok(hooks)
 }
 
@@ -157,8 +157,6 @@ fn scan_bindgen_prototypes(root: &Path, filenames: &[&str]) -> Result<Vec<Protot
     for file in valid_files {
         let src = fs::read_to_string(&file)?;
         let tree = parser.parse(&src, None).context("Parse bindgen file")?;
-
-        // Find all extern "C" function signatures
         let query = tree_sitter::Query::new(
             &tree_sitter_rust::LANGUAGE.into(),
             r#"(function_signature_item
@@ -175,7 +173,6 @@ fn scan_bindgen_prototypes(root: &Path, filenames: &[&str]) -> Result<Vec<Protot
             let name_node = m.captures.iter().find(|c| c.index == 0).unwrap().node;
             let name = get_text(&src, name_node);
 
-            // Filter interesting functions
             if !name.starts_with("cu") && !name.starts_with("__cuda") {
                 continue;
             }
@@ -201,25 +198,27 @@ fn scan_bindgen_prototypes(root: &Path, filenames: &[&str]) -> Result<Vec<Protot
     Ok(prototypes.into_values().collect())
 }
 
-// ─── Emitters ────────────────────────────────────────────────────────────────
-
 fn generate_hook_map(out_dir: &Path, hooks: &HashMap<String, String>) -> Result<()> {
-    use std::io::Write;
     let mut f = fs::File::create(out_dir.join("hook_map.rs"))?;
-    writeln!(f, "match name {{")?;
+    writeln!(f, "|name: &str| {{")?;
+    writeln!(f, "    match name {{")?;
     for name in hooks.keys() {
-        writeln!(f, "    \"{}\" => {{", name)?;
+        writeln!(f, "        \"{}\" => {{", name)?;
         writeln!(f, "            unsafe extern \"C\" {{ fn {}(); }}", name)?;
-        writeln!(f, "            Some({} as *const () as *mut c_void)", name)?;
-        writeln!(f, "    }},")?;
+        writeln!(
+            f,
+            "            Some({} as *const () as *mut std::os::raw::c_void)",
+            name
+        )?;
+        writeln!(f, "        }},")?;
     }
-    writeln!(f, "    _ => None,")?;
+    writeln!(f, "        _ => None,")?;
+    writeln!(f, "    }}")?;
     writeln!(f, "}}")?;
     Ok(())
 }
 
 fn emit_passthroughs(path: &Path, protos: &[Prototype]) -> Result<()> {
-    use std::io::Write;
     let mut f = fs::File::create(path)?;
     for p in protos {
         let args_str = p
@@ -228,7 +227,6 @@ fn emit_passthroughs(path: &Path, protos: &[Prototype]) -> Result<()> {
             .map(|(n, t)| format!("({}: {})", n, t))
             .collect::<Vec<_>>()
             .join(", ");
-
         let aliases_str = if p.aliases.is_empty() {
             String::new()
         } else {
@@ -237,14 +235,12 @@ fn emit_passthroughs(path: &Path, protos: &[Prototype]) -> Result<()> {
 
         writeln!(
             f,
-            "generate_proxy! {{ fn {}([{}]) -> {}; name: {}{} }}",
+            "cuda_interposer::generate_proxy! {{ fn {}([{}]) -> {}; name: {}{} }}",
             p.name, args_str, p.ret, p.name, aliases_str
         )?;
     }
     Ok(())
 }
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 fn create_rust_parser() -> tree_sitter::Parser {
     let mut parser = tree_sitter::Parser::new();
@@ -268,12 +264,10 @@ fn parse_params(src: &str, node: tree_sitter::Node) -> Vec<(String, String)> {
                 .child_by_field_name("pattern")
                 .map(|n| get_text(src, n))
                 .unwrap_or("_");
-
             let ty = child
                 .child_by_field_name("type")
                 .map(|n| get_text(src, n))
                 .unwrap_or("c_void");
-
             out.push((pat.to_string(), ty.to_string()));
         }
     }
@@ -282,7 +276,6 @@ fn parse_params(src: &str, node: tree_sitter::Node) -> Vec<(String, String)> {
 
 fn find_target_dir(out_dir: &Path) -> PathBuf {
     let mut p = out_dir.to_path_buf();
-    // Heuristic: ascend until we see 'build' sibling or similar, usually 3 levels up from OUT_DIR
     for _ in 0..3 {
         p.pop();
     }
