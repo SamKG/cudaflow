@@ -1,6 +1,6 @@
 [package]
 name = "cuda-interposer-build"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 license = "MIT"
 description = "A library for writing CUDA driver API hooks in Rust. This crate provides build scripts and utilities to facilitate the creation of interposers."
