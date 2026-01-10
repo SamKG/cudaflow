@@ -1,0 +1,46 @@
+name: Release-plz
+
+permissions:
+  pull-requests: write
+  contents: write
+  id-token: write # Required for trusted publishing to crates.io
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release-plz:
+    name: Release-plz
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      # Required because your sys crate needs CUDA to compile/verify
+      - name: Install LLVM and Clang
+        run: sudo apt-get update && sudo apt-get install -y llvm-dev libclang-dev clang
+
+      - name: Install CUDA Toolkit
+        uses: Jimver/cuda-toolkit@v0.2.30
+        with:
+          cuda: '13.1.0'
+          method: 'network'
+          sub-packages: '["nvcc", "cudart", "visual_studio_integration"]'
+
+      - name: Run release-plz
+        uses: release-plz/action@v0.5
+        with:
+          # The token used to create the Release PR. 
+          # standard GITHUB_TOKEN works, but a PAT is better if you want the PR to trigger other workflows.
+          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          # The token used to publish to crates.io
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          CUDA_PATH: /usr/local/cuda
