@@ -32,8 +32,21 @@ impl InterposerBuilder {
     /// Run the build process.
     pub fn build(self) -> Result<()> {
         println!("cargo:rerun-if-changed={}", self.src_dir.display());
+        let mut manual_hooks = scan_local_hooks(&self.src_dir)?;
 
-        let manual_hooks = scan_local_hooks(&self.src_dir)?;
+        // Manually inject the core hooking functions into the hook map.
+        // These are defined by the `install_hooks!` macro in the library, not in the
+        // consuming crate's source, so `scan_local_hooks` misses them.
+        // Adding them here ensures `cuGetProcAddress` can properly intercept queries for itself.
+        manual_hooks.insert(
+            "cuGetProcAddress".to_string(),
+            "cuGetProcAddress".to_string(),
+        );
+        manual_hooks.insert(
+            "cuGetProcAddress_v2".to_string(),
+            "cuGetProcAddress_v2".to_string(),
+        );
+
         for hook in manual_hooks.keys() {
             println!("cargo:warning=Detected manual hook: {}", hook);
         }
@@ -51,12 +64,8 @@ impl InterposerBuilder {
 
         let mut driver_passthroughs = Vec::new();
         for proto in all_protos {
-            // Skip functions explicitly hooked by the user
+            // Skip functions explicitly hooked by the user (or injected above)
             if manual_hooks.contains_key(&proto.name) {
-                continue;
-            }
-            // Skip functions handled internally by the interposer infrastructure
-            if proto.name == "cuGetProcAddress" || proto.name == "cuGetProcAddress_v2" {
                 continue;
             }
 
@@ -85,18 +94,20 @@ struct Prototype {
 fn scan_local_hooks(root: &Path) -> Result<HashMap<String, String>> {
     let mut hooks = HashMap::new();
     let mut parser = create_rust_parser();
+
     let macro_query = tree_sitter::Query::new(
         &tree_sitter_rust::LANGUAGE.into(),
         r#"(macro_invocation
-            (identifier) @macro_name (#eq? @macro_name "cuda_hook")
-            (token_tree) @tt
-           )"#,
+        (identifier) @macro_name (#eq? @macro_name "cuda_hook")
+        (token_tree) @tt
+        )"#,
     )?;
+
     let func_query = tree_sitter::Query::new(
         &tree_sitter_rust::LANGUAGE.into(),
         r#"(function_item
-            name: (identifier) @func_name
-            )"#,
+        name: (identifier) @func_name
+        )"#,
     )?;
 
     for entry in WalkDir::new(root) {
@@ -112,9 +123,11 @@ fn scan_local_hooks(root: &Path) -> Result<HashMap<String, String>> {
             while let Some(m) = matches.next() {
                 let tt_node = m.captures.iter().find(|c| c.index == 1).unwrap().node;
                 let tt_text = &src[tt_node.byte_range()];
+
                 if tt_text.len() < 2 {
                     continue;
                 }
+
                 let inner_src = &tt_text[1..tt_text.len() - 1];
 
                 // Double Parse: Macro body
@@ -126,6 +139,7 @@ fn scan_local_hooks(root: &Path) -> Result<HashMap<String, String>> {
                         inner_tree.root_node(),
                         inner_src.as_bytes(),
                     );
+
                     while let Some(im) = inner_matches.next() {
                         let name_node = im.captures[0].node;
                         let name = &inner_src[name_node.byte_range()];
@@ -160,10 +174,10 @@ fn scan_bindgen_prototypes(root: &Path, filenames: &[&str]) -> Result<Vec<Protot
         let query = tree_sitter::Query::new(
             &tree_sitter_rust::LANGUAGE.into(),
             r#"(function_signature_item
-                name: (identifier) @name
-                parameters: (parameters) @params
-                return_type: (_)? @ret
-               )"#,
+            name: (identifier) @name
+            parameters: (parameters) @params
+            return_type: (_)? @ret
+            )"#,
         )?;
 
         let mut cursor = tree_sitter::QueryCursor::new();
@@ -200,8 +214,10 @@ fn scan_bindgen_prototypes(root: &Path, filenames: &[&str]) -> Result<Vec<Protot
 
 fn generate_hook_map(out_dir: &Path, hooks: &HashMap<String, String>) -> Result<()> {
     let mut f = fs::File::create(out_dir.join("hook_map.rs"))?;
+
     writeln!(f, "|name: &str| {{")?;
     writeln!(f, "    match name {{")?;
+
     for name in hooks.keys() {
         writeln!(f, "        \"{}\" => {{", name)?;
         writeln!(f, "            unsafe extern \"C\" {{ fn {}(); }}", name)?;
@@ -212,14 +228,17 @@ fn generate_hook_map(out_dir: &Path, hooks: &HashMap<String, String>) -> Result<
         )?;
         writeln!(f, "        }},")?;
     }
+
     writeln!(f, "        _ => None,")?;
     writeln!(f, "    }}")?;
     writeln!(f, "}}")?;
+
     Ok(())
 }
 
 fn emit_passthroughs(path: &Path, protos: &[Prototype]) -> Result<()> {
     let mut f = fs::File::create(path)?;
+
     for p in protos {
         let args_str = p
             .args
@@ -227,6 +246,7 @@ fn emit_passthroughs(path: &Path, protos: &[Prototype]) -> Result<()> {
             .map(|(n, t)| format!("({}: {})", n, t))
             .collect::<Vec<_>>()
             .join(", ");
+
         let aliases_str = if p.aliases.is_empty() {
             String::new()
         } else {
@@ -239,6 +259,7 @@ fn emit_passthroughs(path: &Path, protos: &[Prototype]) -> Result<()> {
             p.name, args_str, p.ret, p.name, aliases_str
         )?;
     }
+
     Ok(())
 }
 
@@ -264,10 +285,12 @@ fn parse_params(src: &str, node: tree_sitter::Node) -> Vec<(String, String)> {
                 .child_by_field_name("pattern")
                 .map(|n| get_text(src, n))
                 .unwrap_or("_");
+
             let ty = child
                 .child_by_field_name("type")
                 .map(|n| get_text(src, n))
                 .unwrap_or("c_void");
+
             out.push((pat.to_string(), ty.to_string()));
         }
     }
