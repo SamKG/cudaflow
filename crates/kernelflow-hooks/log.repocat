@@ -1,0 +1,225 @@
+[0m[0m[32m[Running: cargo build]
+[0m    Blocking waiting for file lock on build directory
+   Compiling kernelflow_hooks v0.1.0 (/scratch/gpfs/LI/samyakg/Research/kernelflow/crates/kernelflow-hooks)
+error: symbol `cuGetProcAddress` is already defined
+   --> crates/kernelflow-hooks/src/reexports.rs:69:13
+    |
+ 69 |             pub unsafe extern "C" fn $fname( $( $arg : $arg_ty ),* ) -> $ret {
+    |             ^^^
+    |
+   ::: /scratch/gpfs/LI/samyakg/Research/kernelflow/target/debug/build/kernelflow_hooks-8559bc4a0ea2026e/out/passthroughs_driver.rs:340:1
+    |
+340 | generate_proxy! { fn cuGetProcAddress([(symbol: *const ::std::os::raw::c_char), (pfn: *mut *mut ::std::os::raw::c_void), (cudaVersion: ::std::os::raw::c_int), (flags: cuuint64_t)]) -> CUresult; name: cuGetProcAddress }
+    | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `$crate::generate_proxy` which comes from the expansion of the macro `generate_proxy` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: could not compile `kernelflow_hooks` (lib) due to 1 previous error
+[0m[0m[31m[Command exited with 101]
+[0m[0m[0m[32m[Running: cargo build]
+[0m   Compiling kernelflow_hooks v0.1.0 (/scratch/gpfs/LI/samyakg/Research/kernelflow/crates/kernelflow-hooks)
+error: symbol `cuGetProcAddress` is already defined
+   --> crates/kernelflow-hooks/src/reexports.rs:69:13
+    |
+ 69 |             pub unsafe extern "C" fn $fname( $( $arg : $arg_ty ),* ) -> $ret {
+    |             ^^^
+    |
+   ::: /scratch/gpfs/LI/samyakg/Research/kernelflow/target/debug/build/kernelflow_hooks-8559bc4a0ea2026e/out/passthroughs_driver.rs:146:1
+    |
+146 | generate_proxy! { fn cuGetProcAddress([(symbol: *const ::std::os::raw::c_char), (pfn: *mut *mut ::std::os::raw::c_void), (cudaVersion: ::std::os::raw::c_int), (flags: cuuint64_t)]) -> CUresult; name: cuGetProcAddress }
+    | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `$crate::generate_proxy` which comes from the expansion of the macro `generate_proxy` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: could not compile `kernelflow_hooks` (lib) due to 1 previous error
+[0m[0m[31m[Command exited with 101]
+[0m[0m[0m[32m[Running: cargo build]
+[0m   Compiling kernelflow_hooks v0.1.0 (/scratch/gpfs/LI/samyakg/Research/kernelflow/crates/kernelflow-hooks)
+error: symbol `cuGetProcAddress` is already defined
+   --> crates/kernelflow-hooks/src/reexports.rs:69:13
+    |
+ 69 |             pub unsafe extern "C" fn $fname( $( $arg : $arg_ty ),* ) -> $ret {
+    |             ^^^
+    |
+   ::: /scratch/gpfs/LI/samyakg/Research/kernelflow/target/debug/build/kernelflow_hooks-8559bc4a0ea2026e/out/passthroughs_driver.rs:301:1
+    |
+301 | generate_proxy! { fn cuGetProcAddress([(symbol: *const ::std::os::raw::c_char), (pfn: *mut *mut ::std::os::raw::c_void), (cudaVersion: ::std::os::raw::c_int), (flags: cuuint64_t)]) -> CUresult; name: cuGetProcAddress }
+    | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `$crate::generate_proxy` which comes from the expansion of the macro `generate_proxy` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: could not compile `kernelflow_hooks` (lib) due to 1 previous error
+[0m[0m[31m[Command exited with 101]
+[0m[0m[0m[32m[Running: cargo build]
+[0m   Compiling kernelflow_hooks v0.1.0 (/scratch/gpfs/LI/samyakg/Research/kernelflow/crates/kernelflow-hooks)
+error: symbol `cuGetProcAddress` is already defined
+   --> crates/kernelflow-hooks/src/reexports.rs:69:13
+    |
+ 69 |             pub unsafe extern "C" fn $fname( $( $arg : $arg_ty ),* ) -> $ret {
+    |             ^^^
+    |
+   ::: /scratch/gpfs/LI/samyakg/Research/kernelflow/target/debug/build/kernelflow_hooks-8559bc4a0ea2026e/out/passthroughs_driver.rs:446:1
+    |
+446 | generate_proxy! { fn cuGetProcAddress([(symbol: *const ::std::os::raw::c_char), (pfn: *mut *mut ::std::os::raw::c_void), (cudaVersion: ::std::os::raw::c_int), (flags: cuuint64_t)]) -> CUresult; name: cuGetProcAddress }
+    | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `$crate::generate_proxy` which comes from the expansion of the macro `generate_proxy` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: could not compile `kernelflow_hooks` (lib) due to 1 previous error
+[0m[0m[31m[Command exited with 101]
+[0m[0m[0m[32m[Running: cargo build]
+[0m   Compiling kernelflow_hooks v0.1.0 (/scratch/gpfs/LI/samyakg/Research/kernelflow/crates/kernelflow-hooks)
+error: symbol `cuGetProcAddress` is already defined
+   --> crates/kernelflow-hooks/src/reexports.rs:69:13
+    |
+ 69 |             pub unsafe extern "C" fn $fname( $( $arg : $arg_ty ),* ) -> $ret {
+    |             ^^^
+    |
+   ::: /scratch/gpfs/LI/samyakg/Research/kernelflow/target/debug/build/kernelflow_hooks-8559bc4a0ea2026e/out/passthroughs_driver.rs:121:1
+    |
+121 | generate_proxy! { fn cuGetProcAddress([(symbol: *const ::std::os::raw::c_char), (pfn: *mut *mut ::std::os::raw::c_void), (cudaVersion: ::std::os::raw::c_int), (flags: cuuint64_t)]) -> CUresult; name: cuGetProcAddress }
+    | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `$crate::generate_proxy` which comes from the expansion of the macro `generate_proxy` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: could not compile `kernelflow_hooks` (lib) due to 1 previous error
+[0m[0m[31m[Command exited with 101]
+[0m[0m[0m[32m[Running: cargo build]
+[0m   Compiling kernelflow_hooks v0.1.0 (/scratch/gpfs/LI/samyakg/Research/kernelflow/crates/kernelflow-hooks)
+error: symbol `cuGetProcAddress` is already defined
+   --> crates/kernelflow-hooks/src/reexports.rs:69:13
+    |
+ 69 |             pub unsafe extern "C" fn $fname( $( $arg : $arg_ty ),* ) -> $ret {
+    |             ^^^
+    |
+   ::: /scratch/gpfs/LI/samyakg/Research/kernelflow/target/debug/build/kernelflow_hooks-8559bc4a0ea2026e/out/passthroughs_driver.rs:433:1
+    |
+433 | generate_proxy! { fn cuGetProcAddress([(symbol: *const ::std::os::raw::c_char), (pfn: *mut *mut ::std::os::raw::c_void), (cudaVersion: ::std::os::raw::c_int), (flags: cuuint64_t)]) -> CUresult; name: cuGetProcAddress }
+    | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `$crate::generate_proxy` which comes from the expansion of the macro `generate_proxy` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: could not compile `kernelflow_hooks` (lib) due to 1 previous error
+[0m[0m[31m[Command exited with 101]
+[0m[0m[0m[32m[Running: cargo build]
+[0m   Compiling kernelflow_hooks v0.1.0 (/scratch/gpfs/LI/samyakg/Research/kernelflow/crates/kernelflow-hooks)
+error: symbol `cuGetProcAddress` is already defined
+   --> crates/kernelflow-hooks/src/reexports.rs:69:13
+    |
+ 69 |             pub unsafe extern "C" fn $fname( $( $arg : $arg_ty ),* ) -> $ret {
+    |             ^^^
+    |
+   ::: /scratch/gpfs/LI/samyakg/Research/kernelflow/target/debug/build/kernelflow_hooks-8559bc4a0ea2026e/out/passthroughs_driver.rs:107:1
+    |
+107 | generate_proxy! { fn cuGetProcAddress([(symbol: *const ::std::os::raw::c_char), (pfn: *mut *mut ::std::os::raw::c_void), (cudaVersion: ::std::os::raw::c_int), (flags: cuuint64_t)]) -> CUresult; name: cuGetProcAddress }
+    | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `$crate::generate_proxy` which comes from the expansion of the macro `generate_proxy` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: could not compile `kernelflow_hooks` (lib) due to 1 previous error
+[0m[0m[31m[Command exited with 101]
+[0m[0m[0m[32m[Running: cargo build]
+[0m   Compiling kernelflow_hooks v0.1.0 (/scratch/gpfs/LI/samyakg/Research/kernelflow/crates/kernelflow-hooks)
+error: symbol `cuGetProcAddress` is already defined
+   --> crates/kernelflow-hooks/src/reexports.rs:69:13
+    |
+ 69 |             pub unsafe extern "C" fn $fname( $( $arg : $arg_ty ),* ) -> $ret {
+    |             ^^^
+    |
+   ::: /scratch/gpfs/LI/samyakg/Research/kernelflow/target/debug/build/kernelflow_hooks-8559bc4a0ea2026e/out/passthroughs_driver.rs:597:1
+    |
+597 | generate_proxy! { fn cuGetProcAddress([(symbol: *const ::std::os::raw::c_char), (pfn: *mut *mut ::std::os::raw::c_void), (cudaVersion: ::std::os::raw::c_int), (flags: cuuint64_t)]) -> CUresult; name: cuGetProcAddress }
+    | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `$crate::generate_proxy` which comes from the expansion of the macro `generate_proxy` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: could not compile `kernelflow_hooks` (lib) due to 1 previous error
+[0m[0m[31m[Command exited with 101]
+[0m[0m[0m[32m[Running: cargo build]
+[0m   Compiling kernelflow_hooks v0.1.0 (/scratch/gpfs/LI/samyakg/Research/kernelflow/crates/kernelflow-hooks)
+error: symbol `cuGetProcAddress` is already defined
+   --> crates/kernelflow-hooks/src/reexports.rs:69:13
+    |
+ 69 |             pub unsafe extern "C" fn $fname( $( $arg : $arg_ty ),* ) -> $ret {
+    |             ^^^
+    |
+   ::: /scratch/gpfs/LI/samyakg/Research/kernelflow/target/debug/build/kernelflow_hooks-8559bc4a0ea2026e/out/passthroughs_driver.rs:408:1
+    |
+408 | generate_proxy! { fn cuGetProcAddress([(symbol: *const ::std::os::raw::c_char), (pfn: *mut *mut ::std::os::raw::c_void), (cudaVersion: ::std::os::raw::c_int), (flags: cuuint64_t)]) -> CUresult; name: cuGetProcAddress }
+    | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `$crate::generate_proxy` which comes from the expansion of the macro `generate_proxy` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: could not compile `kernelflow_hooks` (lib) due to 1 previous error
+[0m[0m[31m[Command exited with 101]
+[0m[0m[0m[32m[Running: cargo build]
+[0m   Compiling kernelflow_hooks v0.1.0 (/scratch/gpfs/LI/samyakg/Research/kernelflow/crates/kernelflow-hooks)
+error: symbol `cuGetProcAddress` is already defined
+   --> crates/kernelflow-hooks/src/reexports.rs:69:13
+    |
+ 69 |             pub unsafe extern "C" fn $fname( $( $arg : $arg_ty ),* ) -> $ret {
+    |             ^^^
+    |
+   ::: /scratch/gpfs/LI/samyakg/Research/kernelflow/target/debug/build/kernelflow_hooks-8559bc4a0ea2026e/out/passthroughs_driver.rs:153:1
+    |
+153 | generate_proxy! { fn cuGetProcAddress([(symbol: *const ::std::os::raw::c_char), (pfn: *mut *mut ::std::os::raw::c_void), (cudaVersion: ::std::os::raw::c_int), (flags: cuuint64_t)]) -> CUresult; name: cuGetProcAddress }
+    | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `$crate::generate_proxy` which comes from the expansion of the macro `generate_proxy` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: could not compile `kernelflow_hooks` (lib) due to 1 previous error
+[0m[0m[31m[Command exited with 101]
+[0m[0m[0m[32m[Running: cargo build]
+[0m   Compiling kernelflow_hooks v0.1.0 (/scratch/gpfs/LI/samyakg/Research/kernelflow/crates/kernelflow-hooks)
+error: symbol `cuGetProcAddress` is already defined
+   --> crates/kernelflow-hooks/src/reexports.rs:69:13
+    |
+ 69 |             pub unsafe extern "C" fn $fname( $( $arg : $arg_ty ),* ) -> $ret {
+    |             ^^^
+    |
+   ::: /scratch/gpfs/LI/samyakg/Research/kernelflow/target/debug/build/kernelflow_hooks-8559bc4a0ea2026e/out/passthroughs_driver.rs:443:1
+    |
+443 | generate_proxy! { fn cuGetProcAddress([(symbol: *const ::std::os::raw::c_char), (pfn: *mut *mut ::std::os::raw::c_void), (cudaVersion: ::std::os::raw::c_int), (flags: cuuint64_t)]) -> CUresult; name: cuGetProcAddress }
+    | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `$crate::generate_proxy` which comes from the expansion of the macro `generate_proxy` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: could not compile `kernelflow_hooks` (lib) due to 1 previous error
+[0m[0m[31m[Command exited with 101]
+[0m[0m[0m[32m[Running: cargo build]
+[0m   Compiling kernelflow_hooks v0.1.0 (/scratch/gpfs/LI/samyakg/Research/kernelflow/crates/kernelflow-hooks)
+error: symbol `cuGetProcAddress` is already defined
+   --> crates/kernelflow-hooks/src/reexports.rs:69:13
+    |
+ 69 |             pub unsafe extern "C" fn $fname( $( $arg : $arg_ty ),* ) -> $ret {
+    |             ^^^
+    |
+   ::: /scratch/gpfs/LI/samyakg/Research/kernelflow/target/debug/build/kernelflow_hooks-8559bc4a0ea2026e/out/passthroughs_driver.rs:235:1
+    |
+235 | generate_proxy! { fn cuGetProcAddress([(symbol: *const ::std::os::raw::c_char), (pfn: *mut *mut ::std::os::raw::c_void), (cudaVersion: ::std::os::raw::c_int), (flags: cuuint64_t)]) -> CUresult; name: cuGetProcAddress }
+    | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `$crate::generate_proxy` which comes from the expansion of the macro `generate_proxy` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: could not compile `kernelflow_hooks` (lib) due to 1 previous error
+[0m[0m[31m[Command exited with 101]
+[0m[0m[0m[32m[Running: cargo build]
+[0m   Compiling kernelflow_hooks v0.1.0 (/scratch/gpfs/LI/samyakg/Research/kernelflow/crates/kernelflow-hooks)
+error: symbol `cuGetProcAddress` is already defined
+   --> crates/kernelflow-hooks/src/reexports.rs:69:13
+    |
+ 69 |             pub unsafe extern "C" fn $fname( $( $arg : $arg_ty ),* ) -> $ret {
+    |             ^^^
+    |
+   ::: /scratch/gpfs/LI/samyakg/Research/kernelflow/target/debug/build/kernelflow_hooks-8559bc4a0ea2026e/out/passthroughs_driver.rs:543:1
+    |
+543 | generate_proxy! { fn cuGetProcAddress([(symbol: *const ::std::os::raw::c_char), (pfn: *mut *mut ::std::os::raw::c_void), (cudaVersion: ::std::os::raw::c_int), (flags: cuuint64_t)]) -> CUresult; name: cuGetProcAddress }
+    | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `$crate::generate_proxy` which comes from the expansion of the macro `generate_proxy` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: could not compile `kernelflow_hooks` (lib) due to 1 previous error
+[0m[0m[31m[Command exited with 101]
+[0m[0m[0m[32m[Running: cargo build]
+[0m   Compiling kernelflow_hooks v0.1.0 (/scratch/gpfs/LI/samyakg/Research/kernelflow/crates/kernelflow-hooks)
+[Waiting 10s for processes to exit before stopping...]

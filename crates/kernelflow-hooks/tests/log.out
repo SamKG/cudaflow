@@ -1,0 +1,39 @@
++ run
++ export SO_DIR=/home/samyakg/scratch/Research/reaper/reaper/target/debug
++ SO_DIR=/home/samyakg/scratch/Research/reaper/reaper/target/debug
++ export BASE_IMAGE=cuda_12.9.0-cudnn-devel-ubi9.sif
++ BASE_IMAGE=cuda_12.9.0-cudnn-devel-ubi9.sif
++ singularity exec --nv -B /home/samyakg/scratch/Research/reaper/reaper/target/debug/libcuda.so:/libcuda.so:ro -B /home/samyakg/scratch/Research/reaper/reaper/target/debug/libcuda.so.1:/libcuda.so.1:ro -B /home/samyakg/scratch/Research/reaper/reaper/target/debug/libcudart.so:/libcudart.so:ro -B /home/samyakg/scratch/Research/reaper/reaper/target/debug/libcudart.so.1:/libcudart.so.1:ro -B /home/samyakg/scratch/Research/reaper/reaper/target/debug/ld.so.preload:/etc/ld.so.preload:ro /scratch/gpfs/samyakg/containers/cuda_12.9.0-cudnn-devel-ubi9.sif bash -c 'LD_AUDIT=/home/samyakg/scratch/Research/reaper/reaper/crates/reaper-rpc-cuda-hooks/tests/libaudit.so ./kernel'
+[2m2025-06-04T06:34:45.369228Z[0m [32m INFO[0m  __cudaRegisterFatBinary: result=0x21b8430, points to 0x403328
+[2m2025-06-04T06:34:45.375141Z[0m [32m INFO[0m cuGetProcAddress_v2 passthrough → cuInit
+[2m2025-06-04T06:34:45.375191Z[0m [32m INFO[0m cuGetProcAddress_v2 passthrough → cuGetProcAddress
+[2m2025-06-04T06:34:45.375198Z[0m [32m INFO[0m cuGetProcAddress_v2 passthrough → cuGetProcAddress
+[2m2025-06-04T06:34:45.375249Z[0m [32m INFO[0m cuGetProcAddress_v2 passthrough → cuModuleLoad
+[2m2025-06-04T06:34:45.375257Z[0m [32m INFO[0m cuGetProcAddress_v2 passthrough → cuModuleLoadData
+[2m2025-06-04T06:34:45.375262Z[0m [32m INFO[0m cuGetProcAddress_v2 passthrough → cuModuleLoadFatBinary
+[2m2025-06-04T06:34:45.375267Z[0m [32m INFO[0m cuGetProcAddress_v2 passthrough → cuModuleGetFunction
+[2m2025-06-04T06:34:45.375317Z[0m [32m INFO[0m cuGetProcAddress_v2 passthrough → cuLaunchKernel
+[2m2025-06-04T06:34:45.375321Z[0m [32m INFO[0m cuGetProcAddress_v2 passthrough → cuLaunchKernel
+[2m2025-06-04T06:34:45.861307Z[0m [32m INFO[0m Found 2 CUDA devices
+[2m2025-06-04T06:34:45.995704Z[0m [32m INFO[0m Retained primary context 0x2206290 for device 0
+[2m2025-06-04T06:34:46.115383Z[0m [32m INFO[0m Retained primary context 0x2d52b40 for device 1
+[2m2025-06-04T06:34:46.115449Z[0m [32m INFO[0m Initialized CUDA driver!
+[2m2025-06-04T06:34:46.248045Z[0m [32m INFO[0m cuModuleGetFunction called with hfunc: 0x3ea5b08, hmod: 0x3e6ef90, name: 0x40207b
+[2m2025-06-04T06:34:46.248092Z[0m [32m INFO[0m Loaded function 0x3f42c30 on GPU 0
+[2m2025-06-04T06:34:46.248099Z[0m [32m INFO[0m Loaded function 0x3f42c30 on GPU 1
+[2m2025-06-04T06:34:46.248146Z[0m [32m INFO[0m Loaded func 0x3ea5b08
+[2m2025-06-04T06:34:46.248219Z[0m [32m INFO[0m Launching kernel on GPU 0, using context 0x2206290
+[2m2025-06-04T06:34:47.248349Z[0m [32m INFO[0m Launching kernel on GPU 1, using context 0x2d52b40
+[2m2025-06-04T06:34:48.248445Z[0m [32m INFO[0m Launching kernel on GPU 0, using context 0x2206290
+[2m2025-06-04T06:34:49.248516Z[0m [32m INFO[0m Launching kernel on GPU 0, using context 0x2206290
+[2m2025-06-04T06:34:50.248590Z[0m [32m INFO[0m Launching kernel on GPU 1, using context 0x2d52b40
+[2m2025-06-04T06:34:51.248694Z[0m [32m INFO[0m Launching kernel on GPU 0, using context 0x2206290
+[2m2025-06-04T06:34:52.248771Z[0m [32m INFO[0m Launching kernel on GPU 0, using context 0x2206290
+[2m2025-06-04T06:34:53.248846Z[0m [32m INFO[0m Launching kernel on GPU 1, using context 0x2d52b40
+[2m2025-06-04T06:34:54.248920Z[0m [32m INFO[0m Launching kernel on GPU 1, using context 0x2d52b40
+[2m2025-06-04T06:34:55.248993Z[0m [32m INFO[0m Launching kernel on GPU 0, using context 0x2206290
+[2m2025-06-04T06:34:56.249079Z[0m [32m INFO[0m Launching kernel on GPU 0, using context 0x2206290
+[2m2025-06-04T06:34:57.249149Z[0m [32m INFO[0m Launching kernel on GPU 0, using context 0x2206290
+[2m2025-06-04T06:34:58.249219Z[0m [32m INFO[0m Launching kernel on GPU 0, using context 0x2206290
+[2m2025-06-04T06:34:59.250069Z[0m [32m INFO[0m Launching kernel on GPU 1, using context 0x2d52b40
+[2m2025-06-04T06:35:00.250144Z[0m [32m INFO[0m Launching kernel on GPU 0, using context 0x2206290

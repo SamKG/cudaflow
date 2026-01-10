@@ -1,0 +1,41 @@
+[package]
+name = "cust_raw"
+version = "0.11.3"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Low level bindings to the CUDA Driver API"
+repository = "https://github.com/Rust-GPU/rust-cuda"
+readme = "../../README.md"
+links = "cuda"
+build = "build/main.rs"
+
+[build-dependencies]
+bindgen = "0.72.1"
+bimap = "0.6.3"
+cc = "1.2.52"
+doxygen-bindgen = "0.1"
+
+[package.metadata.docs.rs]
+features = [
+    "driver",
+    "cupti",
+    "runtime",
+    "cublas",
+    "cublaslt",
+    "cublasxt",
+    "cudnn",
+    "nvptx-compiler",
+    "nvvm",
+]
+
+[features]
+default = ["driver"]
+driver = []
+runtime = []
+cublas = []
+cublaslt = []
+cublasxt = []
+cudnn = []
+nvptx-compiler = []
+nvvm = []
+cupti = []
