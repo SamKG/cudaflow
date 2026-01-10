@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 license = "MIT"
 description = "A library for writing CUDA driver API hooks in Rust."
+repository = "https://github.com/SamKG/cudaflow"
 
 [dependencies]
 libc = "0.2.180"

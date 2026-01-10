@@ -6,6 +6,7 @@ license = "MIT OR Apache-2.0"
 description = "Low level bindings to the CUDA Driver API. Adopted from cust-raw crate from the Rust-GPU project. https://github.com/Rust-GPU/rust-cuda"
 links = "cuda"
 build = "build/main.rs"
+repository = "https://github.com/SamKG/cudaflow"
 
 [build-dependencies]
 bindgen = "0.72.1"

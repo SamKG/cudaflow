@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 license = "MIT"
 description = "A library for writing CUDA driver API hooks in Rust. This crate provides build scripts and utilities to facilitate the creation of interposers."
+repository = "https://github.com/SamKG/cudaflow"
 
 [dependencies]
 anyhow = "1.0.100"
