@@ -32,12 +32,11 @@ impl InterposerBuilder {
     /// Run the build process.
     pub fn build(self) -> Result<()> {
         println!("cargo:rerun-if-changed={}", self.src_dir.display());
+
         let mut manual_hooks = scan_local_hooks(&self.src_dir)?;
 
         // Manually inject the core hooking functions into the hook map.
-        // These are defined by the `install_hooks!` macro in the library, not in the
-        // consuming crate's source, so `scan_local_hooks` misses them.
-        // Adding them here ensures `cuGetProcAddress` can properly intercept queries for itself.
+        // These are defined by the `install_hooks!` macro in the library.
         manual_hooks.insert(
             "cuGetProcAddress".to_string(),
             "cuGetProcAddress".to_string(),
@@ -54,7 +53,10 @@ impl InterposerBuilder {
         generate_hook_map(&self.out_dir, &manual_hooks)?;
 
         let target_dir = find_target_dir(&self.out_dir);
-        let all_protos = scan_bindgen_prototypes(&target_dir, &["driver_internal_sys.rs"])?;
+
+        // Scan both driver and runtime prototypes
+        let all_protos =
+            scan_bindgen_prototypes(&target_dir, &["driver_internal_sys.rs", "runtime_sys.rs"])?;
 
         if all_protos.is_empty() {
             println!(
@@ -63,13 +65,19 @@ impl InterposerBuilder {
         }
 
         let mut driver_passthroughs = Vec::new();
+        let mut runtime_passthroughs = Vec::new();
+
         for proto in all_protos {
-            // Skip functions explicitly hooked by the user (or injected above)
+            // Skip functions explicitly hooked by the user
             if manual_hooks.contains_key(&proto.name) {
                 continue;
             }
 
-            if proto.name.starts_with("cu") {
+            // Distinguish between Runtime (cuda*) and Driver (cu*)
+            // Note: 'cuda' technically starts with 'cu', so we check cuda first.
+            if proto.name.starts_with("cuda") || proto.name.starts_with("__cuda") {
+                runtime_passthroughs.push(proto);
+            } else if proto.name.starts_with("cu") {
                 driver_passthroughs.push(proto);
             }
         }
@@ -77,6 +85,11 @@ impl InterposerBuilder {
         emit_passthroughs(
             &self.out_dir.join("passthroughs_driver.rs"),
             &driver_passthroughs,
+        )?;
+
+        emit_passthroughs(
+            &self.out_dir.join("passthroughs_runtime.rs"),
+            &runtime_passthroughs,
         )?;
 
         Ok(())
@@ -118,6 +131,7 @@ fn scan_local_hooks(root: &Path) -> Result<HashMap<String, String>> {
                 .parse(&src, None)
                 .context("Failed to parse rust file")?;
             let mut cursor = tree_sitter::QueryCursor::new();
+
             let mut matches = cursor.matches(&macro_query, tree.root_node(), src.as_bytes());
 
             while let Some(m) = matches.next() {
@@ -139,7 +153,6 @@ fn scan_local_hooks(root: &Path) -> Result<HashMap<String, String>> {
                         inner_tree.root_node(),
                         inner_src.as_bytes(),
                     );
-
                     while let Some(im) = inner_matches.next() {
                         let name_node = im.captures[0].node;
                         let name = &inner_src[name_node.byte_range()];
@@ -171,6 +184,7 @@ fn scan_bindgen_prototypes(root: &Path, filenames: &[&str]) -> Result<Vec<Protot
     for file in valid_files {
         let src = fs::read_to_string(&file)?;
         let tree = parser.parse(&src, None).context("Parse bindgen file")?;
+
         let query = tree_sitter::Query::new(
             &tree_sitter_rust::LANGUAGE.into(),
             r#"(function_signature_item
@@ -187,6 +201,8 @@ fn scan_bindgen_prototypes(root: &Path, filenames: &[&str]) -> Result<Vec<Protot
             let name_node = m.captures.iter().find(|c| c.index == 0).unwrap().node;
             let name = get_text(&src, name_node);
 
+            // Filter for Driver (cu*) and Runtime (cuda*)
+            // Also include internal __cuda symbols if necessary
             if !name.starts_with("cu") && !name.starts_with("__cuda") {
                 continue;
             }
@@ -238,7 +254,6 @@ fn generate_hook_map(out_dir: &Path, hooks: &HashMap<String, String>) -> Result<
 
 fn emit_passthroughs(path: &Path, protos: &[Prototype]) -> Result<()> {
     let mut f = fs::File::create(path)?;
-
     for p in protos {
         let args_str = p
             .args
@@ -259,7 +274,6 @@ fn emit_passthroughs(path: &Path, protos: &[Prototype]) -> Result<()> {
             p.name, args_str, p.ret, p.name, aliases_str
         )?;
     }
-
     Ok(())
 }
 
@@ -285,12 +299,10 @@ fn parse_params(src: &str, node: tree_sitter::Node) -> Vec<(String, String)> {
                 .child_by_field_name("pattern")
                 .map(|n| get_text(src, n))
                 .unwrap_or("_");
-
             let ty = child
                 .child_by_field_name("type")
                 .map(|n| get_text(src, n))
                 .unwrap_or("c_void");
-
             out.push((pat.to_string(), ty.to_string()));
         }
     }

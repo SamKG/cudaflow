@@ -8,11 +8,13 @@ pub use paste;
 pub use tracing;
 
 // ─── Library Loading ─────────────────────────────────────────────────────────
+
 struct DlHandle(*mut c_void);
 unsafe impl Send for DlHandle {}
 unsafe impl Sync for DlHandle {}
 
 static CUDA_LIB: OnceLock<DlHandle> = OnceLock::new();
+static CUDART_LIB: OnceLock<DlHandle> = OnceLock::new();
 
 fn get_libcuda() -> *mut c_void {
     let handle_wrapper = CUDA_LIB.get_or_init(|| unsafe {
@@ -37,13 +39,51 @@ fn get_libcuda() -> *mut c_void {
                 return DlHandle(handle);
             }
         }
+
         panic!("Failed to find/load libcuda.so. Ensure it is in LD_LIBRARY_PATH.");
     });
     handle_wrapper.0
 }
 
+fn get_libcudart() -> *mut c_void {
+    let handle_wrapper = CUDART_LIB.get_or_init(|| unsafe {
+        let mut paths = vec![
+            "/usr/local/cuda/targets/x86_64-linux/lib/libcudart.so".to_string(),
+            "/usr/lib/x86_64-linux-gnu/libcudart.so".to_string(),
+            "/usr/lib64/libcudart.so".to_string(),
+        ];
+
+        // If CUDA_PATH or CUDA_HOME are set, prioritize those
+        if let Some(cuda_home) = env::var_os("CUDA_HOME") {
+            let path = format!("{}/targets/x86_64-linux/lib/libcudart.so", cuda_home.to_string_lossy());
+            paths.insert(0, path);
+        }
+
+        for path in paths.iter() {
+            let s = CString::new(path.clone()).unwrap();
+            let flags = libc::RTLD_NOW | libc::RTLD_LOCAL | libc::RTLD_NODELETE;
+            let handle = libc::dlopen(s.as_ptr(), flags);
+            if !handle.is_null() {
+                debug!("Loaded real CUDA runtime from: {}", path);
+                return DlHandle(handle);
+            }
+        }
+
+        panic!("Failed to find/load libcudart.so. Ensure CUDA Toolkit is installed and in LD_LIBRARY_PATH.");
+    });
+    handle_wrapper.0
+}
+
 pub fn dlsym_next(symbol: &[u8]) -> *mut c_void {
-    let handle = get_libcuda();
+    let sym_str = std::str::from_utf8(symbol).unwrap_or("");
+
+    // Route to the correct library based on prefix
+    let handle = if sym_str.starts_with("cuda") {
+        get_libcudart()
+    } else {
+        get_libcuda()
+    };
+
     unsafe { libc::dlsym(handle, symbol.as_ptr() as *const _) }
 }
 
@@ -86,10 +126,11 @@ macro_rules! install_hooks {
 
                 // B. Intercept
                 if let Some(our_ptr) = get_local_hook(&sym_name) {
-                    $crate::tracing::debug!("Hooking symbol: {}", sym_name);
+                    $crate::tracing::debug!("Hooking symbol via cuGetProcAddress: {}", sym_name);
                     unsafe { *pfn = our_ptr };
                     return 0; // CUDA_SUCCESS
                 }
+
                 ret
             }
         }
@@ -109,10 +150,11 @@ macro_rules! install_hooks {
                 let ret = unsafe { real_fn(symbol, pfn, cuda_version, flags, symbol_status) };
 
                 if let Some(our_ptr) = get_local_hook(&sym_name) {
-                    $crate::tracing::debug!("Hooking symbol: {}", sym_name);
+                    $crate::tracing::debug!("Hooking symbol via cuGetProcAddress: {}", sym_name);
                     unsafe { *pfn = our_ptr };
                     return 0; // CUDA_SUCCESS
                 }
+
                 ret
             }
         }
@@ -193,12 +235,12 @@ macro_rules! generate_proxy {
     ) => {
         $crate::paste::paste! {
             static [<__REAL_ $fname:upper>]: $crate::once_cell::sync::Lazy<
-                 extern "C" fn( $($arg_ty),* ) -> $ret
+                  extern "C" fn( $($arg_ty),* ) -> $ret
             > = $crate::once_cell::sync::Lazy::new(|| {
                 let name = concat!(stringify!($real_sym), "\0");
                 let ptr = $crate::dlsym_next(name.as_bytes());
                 if ptr.is_null() {
-                    eprintln!("fatal: symbol '{}' not found in underlying libcuda", name);
+                    eprintln!("fatal: symbol '{}' not found in underlying library", name);
                     std::process::abort();
                 }
                 unsafe { std::mem::transmute(ptr) }
@@ -223,7 +265,6 @@ macro_rules! generate_proxy {
             fn $fname $args_tt -> $ret;
             target_symbol: $real_sym
         );
-
         $(
             $crate::generate_proxy!(
                 @recurse_aliases
