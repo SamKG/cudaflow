@@ -81,7 +81,7 @@ dependencies = [
 
 [[package]]
 name = "cuda-interposer-sys"
-version = "0.12.0"
+version = "0.13.1"
 dependencies = [
  "bimap",
  "bindgen",

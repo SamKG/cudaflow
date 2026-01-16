@@ -36,7 +36,7 @@ macro_rules! cuda_errcheck {
         if result == $crate::driver_internal_sys::CUresult::CUDA_SUCCESS {
             Ok(())
         } else {
-            Err($crate::CudaError { errcode: result })
+            Err($crate::driver_internal_helpers::CudaError { errcode: result })
         }
     }};
 }

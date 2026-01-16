@@ -1,6 +1,6 @@
 [package]
 name = "cuda-interposer-sys"
-version = "0.12.0"
+version = "0.13.1"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 description = "Low level bindings to the CUDA Driver API. Adopted from cust-raw crate from the Rust-GPU project. https://github.com/Rust-GPU/rust-cuda"
