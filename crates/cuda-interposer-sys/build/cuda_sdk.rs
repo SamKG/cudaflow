@@ -40,7 +40,7 @@ impl CudaSdk {
         let header_content = fs::read_to_string(header_path)?;
         let runtime_version = Self::parse_runtime_version(header_content.as_str())?;
         // Retrieve the CUDA include paths and library paths.
-        let cuda_include_paths = vec![cuda_root.join("include")];
+        let cuda_include_paths = vec![cuda_root.join("include"), cuda_root.join("targets").join("x86_64-linux").join("include")];
         let cuda_library_paths = Self::find_cuda_library_dirs(cuda_root.as_path())?;
         // Retrieve the NVVM related paths.
         let nvvm_include_paths = Self::find_nvvm_include_dirs(cuda_root.as_path())?;

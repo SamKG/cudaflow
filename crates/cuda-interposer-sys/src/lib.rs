@@ -1,3 +1,4 @@
+
 #[cfg(feature = "driver")]
 #[allow(clippy::missing_safety_doc)]
 pub mod driver_sys;
@@ -5,6 +6,10 @@ pub mod driver_sys;
 #[cfg(feature = "driver")]
 #[allow(clippy::missing_safety_doc)]
 pub mod driver_internal_sys;
+
+#[cfg(feature = "driver")]
+#[allow(clippy::missing_safety_doc)]
+pub mod driver_internal_helpers;
 
 #[cfg(feature = "runtime")]
 #[allow(clippy::missing_safety_doc)]

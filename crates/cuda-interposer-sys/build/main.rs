@@ -406,7 +406,7 @@ fn create_cupti_bindings(sdk: &cuda_sdk::CudaSdk, outdir: &path::Path, manifest_
         .header(header.to_str().expect("header should be valid UTF-8"))
         .parse_callbacks(Box::new(
             callbacks::BindgenCallbacks::with_function_renames(callbacks::FunctionRenames::new(
-                "cu",
+                "cupti",
                 outdir,
                 header,
                 sdk.cuda_include_paths().to_owned(),
@@ -417,13 +417,18 @@ fn create_cupti_bindings(sdk: &cuda_sdk::CudaSdk, outdir: &path::Path, manifest_
                 .iter()
                 .map(|p| format!("-I{}", p.display())),
         )
-        .allowlist_type("^CU.*")
-        .allowlist_type("^cuuint(32|64)_t")
-        .allowlist_type("^cudaError_enum")
-        .allowlist_type("^cu.*Complex$")
-        .allowlist_type("^cuda.*")
-        .allowlist_var("^CU.*")
-        .allowlist_function("^cu.*")
+        .clang_arg("-x")
+        .clang_arg("c++")
+        .clang_arg("-std=c++14")
+        .enable_cxx_namespaces()
+        // .allowlist_type("^CU.*")
+        // .allowlist_type("^cuuint(32|64)_t")
+        // .allowlist_type("^cudaError_enum")
+        // .allowlist_type("^cu.*Complex$")
+        // .allowlist_type("^cuda.*")
+        // .allowlist_var("^CU.*")
+        .allowlist_function("^cupti.*")
+        .allowlist_function(".*cupti.*")
         .no_partialeq("CUDA_HOST_NODE_PARAMS.*")
         .no_partialeq("CUDA_KERNEL_NODE_PARAMS.*")
         .no_hash("CUDA_HOST_NODE_PARAMS.*")
@@ -439,7 +444,7 @@ fn create_cupti_bindings(sdk: &cuda_sdk::CudaSdk, outdir: &path::Path, manifest_
         .derive_ord(true)
         .size_t_is_usize(true)
         .layout_tests(true)
-        .must_use_type("CUresult")
+        .must_use_type("CUptiResult")
         .generate()
         .expect("Unable to generate CUPTI bindings.");
     bindings
