@@ -78,7 +78,7 @@ pub fn dlsym_next(symbol: &[u8]) -> *mut c_void {
     let sym_str = std::str::from_utf8(symbol).unwrap_or("");
 
     // Route to the correct library based on prefix
-    let handle = if sym_str.starts_with("cuda") {
+    let handle = if sym_str.starts_with("cuda") || sym_str.starts_with("__cuda") {
         get_libcudart()
     } else {
         get_libcuda()
