@@ -99,6 +99,7 @@ fn main() {
     }
     if cfg!(feature = "cupti") {
         println!("cargo::rustc-link-lib=dylib=cupti");
+        println!("cargo::rustc-link-lib=dylib=checkpoint");
     }
     if cfg!(feature = "nvvm") {
         for libdir in sdk.nvvm_library_paths() {
@@ -421,12 +422,8 @@ fn create_cupti_bindings(sdk: &cuda_sdk::CudaSdk, outdir: &path::Path, manifest_
         .clang_arg("c++")
         .clang_arg("-std=c++14")
         .enable_cxx_namespaces()
-        // .allowlist_type("^CU.*")
-        // .allowlist_type("^cuuint(32|64)_t")
-        // .allowlist_type("^cudaError_enum")
-        // .allowlist_type("^cu.*Complex$")
-        // .allowlist_type("^cuda.*")
-        // .allowlist_var("^CU.*")
+        .allowlist_item(".*cupti.*")
+        .allowlist_item(".*CUpti.*")
         .allowlist_function("^cupti.*")
         .allowlist_function(".*cupti.*")
         .no_partialeq("CUDA_HOST_NODE_PARAMS.*")
@@ -438,6 +435,7 @@ fn create_cupti_bindings(sdk: &cuda_sdk::CudaSdk, outdir: &path::Path, manifest_
         .default_enum_style(bindgen::EnumVariation::Rust {
             non_exhaustive: false,
         })
+        .clang_macro_fallback()
         .derive_default(true)
         .derive_eq(true)
         .derive_hash(true)
