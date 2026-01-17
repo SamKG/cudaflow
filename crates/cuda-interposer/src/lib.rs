@@ -1,5 +1,5 @@
 use std::{env, ffi::CString, os::raw::c_void, sync::OnceLock};
-use tracing::debug;
+use tracing::{debug, warn};
 
 // Re-exports for macros
 pub use libc;
@@ -84,7 +84,11 @@ pub fn dlsym_next(symbol: &[u8]) -> *mut c_void {
         get_libcuda()
     };
 
-    unsafe { libc::dlsym(handle, symbol.as_ptr() as *const _) }
+    let ptr = unsafe { libc::dlsym(handle, symbol.as_ptr() as *const _) };
+    if ptr.is_null() {
+        warn!("dlsym_next fail for symbol: {sym_str}");
+    }
+    ptr
 }
 
 // ─── Macros ──────────────────────────────────────────────────────────────────
@@ -100,6 +104,7 @@ macro_rules! install_hooks {
         };
         use tracing::debug;
 
+        #[inline(always)]
         fn get_local_hook(name: &str) -> Option<*mut $crate::libc::c_void> {
             // Include returns the closure expression from hook_map.rs
             let hook_fn = include!(concat!(env!("OUT_DIR"), "/hook_map.rs"));
@@ -124,9 +129,8 @@ macro_rules! install_hooks {
                 let real_fn = *__real_cuGetProcAddress_v2;
                 let ret = unsafe { real_fn(symbol, pfn, cuda_version, flags, symbol_status) };
 
-                // B. Intercept
                 if let Some(our_ptr) = get_local_hook(&sym_name) {
-                    $crate::tracing::debug!("Hooking symbol via cuGetProcAddress: {}", sym_name);
+                    $crate::tracing::debug!("Hooking symbol via cuGetProcAddress_v2: {}", sym_name);
                     unsafe { *pfn = our_ptr };
                     return 0; // CUDA_SUCCESS
                 }
@@ -143,19 +147,7 @@ macro_rules! install_hooks {
                 flags: u64,
                 symbol_status: *mut CUdriverProcAddressQueryResult
             ) -> CUresult {
-                let sym_name_c = unsafe { ::std::ffi::CStr::from_ptr(symbol) };
-                let sym_name = sym_name_c.to_string_lossy();
-
-                let real_fn = *__real_cuGetProcAddress;
-                let ret = unsafe { real_fn(symbol, pfn, cuda_version, flags, symbol_status) };
-
-                if let Some(our_ptr) = get_local_hook(&sym_name) {
-                    $crate::tracing::debug!("Hooking symbol via cuGetProcAddress: {}", sym_name);
-                    unsafe { *pfn = our_ptr };
-                    return 0; // CUDA_SUCCESS
-                }
-
-                ret
+               cuGetProcAddress_v2(symbol, pfn, cuda_version, flags, symbol_status)
             }
         }
     };
@@ -235,7 +227,7 @@ macro_rules! generate_proxy {
     ) => {
         $crate::paste::paste! {
             static [<__REAL_ $fname:upper>]: $crate::once_cell::sync::Lazy<
-                  extern "C" fn( $($arg_ty),* ) -> $ret
+                  unsafe extern "C" fn( $($arg_ty),* ) -> $ret
             > = $crate::once_cell::sync::Lazy::new(|| {
                 let name = concat!(stringify!($real_sym), "\0");
                 let ptr = $crate::dlsym_next(name.as_bytes());
@@ -247,7 +239,7 @@ macro_rules! generate_proxy {
             });
 
             #[unsafe(no_mangle)]
-            pub extern "C" fn $fname( $( $arg : $arg_ty ),* ) -> $ret {
+            pub unsafe extern "C" fn $fname( $( $arg : $arg_ty ),* ) -> $ret {
                 let f = *[<__REAL_ $fname:upper>];
                 f( $( $arg ),* )
             }
