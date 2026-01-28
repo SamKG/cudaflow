@@ -1,4 +1,3 @@
-
 #[cfg(feature = "driver")]
 #[allow(clippy::missing_safety_doc)]
 pub mod driver_sys;
@@ -35,3 +34,7 @@ pub mod nvvm_sys;
 #[cfg(feature = "cupti")]
 #[allow(clippy::missing_safety_doc)]
 pub mod cupti_sys;
+
+#[cfg(feature = "cupti")]
+#[allow(clippy::missing_safety_doc)]
+pub mod cupti_helpers;

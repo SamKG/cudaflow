@@ -1,7 +1,7 @@
 use std::ffi::CStr;
 use std::fmt;
 
-use crate::driver_internal_sys::{cuGetErrorString, CUresult};
+use crate::driver_internal_sys::{CUresult, cuGetErrorString};
 
 #[derive(Debug, Copy, Clone)]
 pub struct CudaError {
@@ -31,12 +31,14 @@ impl std::error::Error for CudaError {}
 
 #[macro_export]
 macro_rules! cuda_errcheck {
-    ($expr:expr) => {{
-        let result = $expr;
-        if result == $crate::driver_internal_sys::CUresult::CUDA_SUCCESS {
-            Ok(())
-        } else {
-            Err($crate::driver_internal_helpers::CudaError { errcode: result })
+    ($expr:expr) => {
+        unsafe {
+            let result = $expr;
+            if result == $crate::driver_internal_sys::CUresult::CUDA_SUCCESS {
+                Ok(())
+            } else {
+                Err($crate::driver_internal_helpers::CudaError { errcode: result })
+            }
         }
-    }};
+    };
 }

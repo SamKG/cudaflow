@@ -424,8 +424,6 @@ fn create_cupti_bindings(sdk: &cuda_sdk::CudaSdk, outdir: &path::Path, manifest_
         .enable_cxx_namespaces()
         .allowlist_item(".*cupti.*")
         .allowlist_item(".*CUpti.*")
-        .allowlist_function("^cupti.*")
-        .allowlist_function(".*cupti.*")
         .no_partialeq("CUDA_HOST_NODE_PARAMS.*")
         .no_partialeq("CUDA_KERNEL_NODE_PARAMS.*")
         .no_hash("CUDA_HOST_NODE_PARAMS.*")
