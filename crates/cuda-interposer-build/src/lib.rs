@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use cfg_expr::{Expression, Predicate};
 use std::collections::HashMap;
 use std::env;
 use std::fs;
@@ -104,6 +105,54 @@ struct Prototype {
     ret: String,
 }
 
+fn is_node_cfg_enabled(mut node: tree_sitter::Node, src: &str) -> bool {
+    // Simple string scan for file-level configs
+    if src.contains("#![cfg(feature = \"primary\")]") && std::env::var("CARGO_FEATURE_PRIMARY").is_err() {
+        return false;
+    }
+    if src.contains("#![cfg(feature = \"secondary\")]") && std::env::var("CARGO_FEATURE_SECONDARY").is_err() {
+        return false;
+    }
+
+    loop {
+        let mut n = node.prev_sibling();
+        while let Some(sib) = n {
+            if sib.kind() == "attribute_item" {
+                let attr_text = &src[sib.byte_range()];
+                if attr_text.starts_with("#[cfg(") && attr_text.ends_with(")]") {
+                    let inner = &attr_text[6..attr_text.len() - 2];
+                    if let Ok(expr) = cfg_expr::Expression::parse(inner) {
+                        let res = expr.eval(|pred| match pred {
+                            cfg_expr::Predicate::Feature(feat) => {
+                                let env_var = format!(
+                                    "CARGO_FEATURE_{}",
+                                    feat.to_uppercase().replace("-", "_")
+                                );
+                                std::env::var(&env_var).is_ok()
+                            }
+                            _ => true,
+                        });
+                        if !res {
+                            return false;
+                        }
+                    }
+                }
+            } else if sib.kind() == "line_comment" || sib.kind() == "block_comment" {
+                // ignore
+            } else {
+                break;
+            }
+            n = sib.prev_sibling();
+        }
+        if let Some(parent) = node.parent() {
+            node = parent;
+        } else {
+            break;
+        }
+    }
+    true
+}
+
 fn scan_local_hooks(root: &Path) -> Result<HashMap<String, String>> {
     let mut hooks = HashMap::new();
     let mut parser = create_rust_parser();
@@ -135,6 +184,13 @@ fn scan_local_hooks(root: &Path) -> Result<HashMap<String, String>> {
             let mut matches = cursor.matches(&macro_query, tree.root_node(), src.as_bytes());
 
             while let Some(m) = matches.next() {
+                let macro_name_node = m.captures.iter().find(|c| c.index == 0).unwrap().node;
+                if let Some(macro_invocation_node) = macro_name_node.parent() {
+                    if !is_node_cfg_enabled(macro_invocation_node, &src) {
+                        continue;
+                    }
+                }
+
                 let tt_node = m.captures.iter().find(|c| c.index == 1).unwrap().node;
                 let tt_text = &src[tt_node.byte_range()];
 

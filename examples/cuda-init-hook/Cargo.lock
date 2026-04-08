@@ -75,6 +75,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cfg-expr"
+version = "0.20.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c6b04e07d8080154ed4ac03546d9a2b303cc2fe1901ba0b35b301516e289368"
+dependencies = [
+ "smallvec",
+]
+
+[[package]]
 name = "cfg-if"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -142,6 +151,7 @@ name = "cuda-interposer-build"
 version = "0.2.2"
 dependencies = [
  "anyhow",
+ "cfg-expr",
  "tree-sitter",
  "tree-sitter-rust",
  "walkdir",
