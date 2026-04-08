@@ -1,13 +1,13 @@
 [package]
 name = "cuda-interposer-build"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2024"
 license = "MIT"
 description = "A library for writing CUDA driver API hooks in Rust. This crate provides build scripts and utilities to facilitate the creation of interposers."
 repository = "https://github.com/SamKG/cudaflow"
 
 [dependencies]
-anyhow = "1.0.100"
-tree-sitter = "0.26.3"
-tree-sitter-rust = "0.24.0"
+anyhow = "1.0.102"
+tree-sitter = "0.26.8"
+tree-sitter-rust = "0.24.2"
 walkdir = "2.5.0"
