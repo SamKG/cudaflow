@@ -138,7 +138,7 @@ checksum = "52560adf09603e58c9a7ee1fe1dcb95a16927b17c127f0ac02d6e768a0e25bc1"
 
 [[package]]
 name = "cuda-interposer"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "libc",
  "once_cell",
@@ -148,7 +148,7 @@ dependencies = [
 
 [[package]]
 name = "cuda-interposer-build"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "cfg-expr",
@@ -159,7 +159,7 @@ dependencies = [
 
 [[package]]
 name = "cuda-interposer-sys"
-version = "0.13.4"
+version = "0.13.5"
 dependencies = [
  "bimap",
  "bindgen",
@@ -169,7 +169,7 @@ dependencies = [
 
 [[package]]
 name = "cuda_init_hook"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "anyhow",
  "ctor",

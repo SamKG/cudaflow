@@ -38,7 +38,7 @@ dependencies = [
 
 [[package]]
 name = "cuda-interposer-build"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "cfg-expr",
